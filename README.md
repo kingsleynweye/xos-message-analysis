@@ -18,11 +18,22 @@ Note that the source-code has been written based on the `chat.db` schema used in
 ## Usage
 To process the database, run the following command at a minimum:
 
-```
+```console
 python -m src.main process_database -c
 ```
 
-It will first copy the database from `~/Library/Messages/chat.db` to `data/chat.db` (in the repository's directory) before processing the data using the `src.ProcessDatabase` class.
+It will first copy the database from `~/Library/Messages/chat.db` to `data/chat.db` (in the repository's root directory) before processing the data using the `src.ProcessDatabase` class.
+
+## Use of ChatGPT
+A lot of debugging and data wrangling went into this project and there doesn't seem to be any actual documentation on the `chat.db` schema by Apple, so ChatGPT became my companion on this project. Here are some of our public chats that helped with debugging SQLite and the schema (title are ChatGPT generated):
+
+- [SQLite Performance Optimization](https://chatgpt.com/share/674a03a6-ad48-8010-bf15-516bca55bc1e)
+- [SQLite query hanging fix](https://chatgpt.com/share/674a00e4-d720-8010-980c-38a6a267098d)
+- [Is_emote field explanation](https://chatgpt.com/share/674a02e9-dbc8-8010-b03f-6fce1a299458)
+- [Regex Replace in SQLite](https://chatgpt.com/share/674a0237-5d54-8010-9b75-e84381d13cea)
+- [Export iOS Contacts Database](https://chatgpt.com/share/674a0201-3bc0-8010-8689-9fe1f4623837)
+- [Group by Day SQLite](https://chatgpt.com/share/674a01c9-7530-8010-863d-bfd6bdfd65e1)
+- [Query iMessage 8 Ball Wins](https://chatgpt.com/share/674a017b-1aec-8010-8f80-c3046f792f38)
 
 ## Other need-to-knows
 More documentation to come 😉
