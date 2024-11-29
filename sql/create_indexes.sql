@@ -1,0 +1,15 @@
+CREATE INDEX IF NOT EXISTS dash_msg_summary_message_rowid ON dashboard_message_summary (message_rowid);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_message_is_from_me ON dashboard_message_summary (message_is_from_me);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_is_audio_message ON dashboard_message_summary (is_audio_message);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_associated_message_guid ON dashboard_message_summary (associated_message_guid);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_is_gamepigeon_message ON dashboard_message_summary (is_gamepigeon_message);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_unix_date ON dashboard_message_summary (unix_date);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_unix_timestamp ON dashboard_message_summary (unix_timestamp);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_date ON dashboard_message_summary (date);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_timestamp ON dashboard_message_summary (timestamp);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_handle_rowid ON dashboard_message_summary (handle_rowid);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_handle_id ON dashboard_message_summary (handle_id);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_contact_display_name ON dashboard_message_summary (contact_display_name);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_contact_display_location ON dashboard_message_summary (contact_display_location);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_my_handle_id ON dashboard_message_summary (my_handle_id);
+CREATE INDEX IF NOT EXISTS dash_msg_summary_my_display_location ON dashboard_message_summary (my_display_location);
