@@ -1,7 +1,7 @@
 # xOS Message Analysis
 Inspired by arguments with friends about who has more Gamepigeon's 8-ball pool wins, this repository provides _Pythonic_ source-code to process the `chat.db` `SQLite` database that is stored in Apple's Mac computers. 
 
-The processing includes creating new views and tables in the database that summarize the data better including tokenization of messages for use in generating word clouds. The processed data are used in a Grafana dashboard that analyzes owner's messaging patterns and behaviors on the Message app in iOS, MacOS, iPadOS, and any other <em>x</em>OS.
+The processing includes creating new views and tables in the database that summarize the data better including tokenization of messages for use in generating word clouds. The processed data are used in a Grafana dashboard that analyzes owner's messaging patterns and behaviors in the Message app on iOS, MacOS, iPadOS, and any other <em>x</em>OS.
 
 ## Installation
 At the moment, the best way to utilize this project is to clone the repository and install the Python dependencies:
