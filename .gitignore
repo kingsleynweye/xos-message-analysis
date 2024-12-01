@@ -171,3 +171,5 @@ notebooks
 *.db
 *.db-shm
 *.db-wal
+grafana
+sql/select_restricted_user_handle_whitelist.sql

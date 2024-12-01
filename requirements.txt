@@ -3,5 +3,6 @@ nltk
 numpy
 pandas
 pytypedstream
+pyyaml
 simplejson
 spacy

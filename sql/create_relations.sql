@@ -1,4 +1,6 @@
--- PRAGMA FOREIGN_KEYS = ON;
+PRAGMA FOREIGN_KEYS = ON;
+
+DROP VIEW IF EXISTS dashboard_user_restricted_view;
 DROP VIEW IF EXISTS dashboard_handle_and_location_summary;
 DROP VIEW IF EXISTS handle_area_code_summary;
 DROP VIEW IF EXISTS contact_handle_map;
@@ -7,6 +9,8 @@ DROP VIEW IF EXISTS recent_chat_message_join;
 DROP VIEW IF EXISTS contact_phone_number_summary;
 DROP VIEW IF EXISTS contact_email_address_summary;
 DROP VIEW IF EXISTS contact_name_summary;
+DROP TABLE IF EXISTS grafana_restricted_user_handle_whitelist;
+DROP TABLE IF EXISTS grafana_user_metadata;
 DROP TABLE IF EXISTS dashboard_message_summary;
 DROP TABLE IF EXISTS city_metadata;
 DROP TABLE IF EXISTS state_name;
@@ -281,6 +285,35 @@ CREATE TABLE city_metadata (
         ON DELETE NO ACTION
         ON UPDATE CASCADE,
     UNIQUE (country_id, city_name_id, state_name_id, area_code_id)
+);
+
+CREATE TABLE IF NOT EXISTS grafana_user_metadata (
+    id INTEGER NOT NULL,
+    email_address_id INTEGER NOT NULL,
+    contact_reference_handle_rowid INTEGER NOT NULL,
+    restrict_view INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (id),
+    FOREIGN KEY (email_address_id) REFERENCES email_address (id)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE,
+    FOREIGN KEY (contact_reference_handle_rowid) REFERENCES handle (ROWID)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE,
+    UNIQUE (email_address_id)
+);
+
+CREATE TABLE IF NOT EXISTS grafana_restricted_user_handle_whitelist (
+    id INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    handle_rowid INTEGER NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY ("user_id") REFERENCES grafana_user_metadata (id)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE,
+    FOREIGN KEY (handle_rowid) REFERENCES handle (ROWID)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE,
+    UNIQUE ("user_id", handle_rowid)
 );
 
 CREATE TABLE IF NOT EXISTS dashboard_message_summary (
@@ -790,4 +823,24 @@ CREATE VIEW dashboard_handle_and_location_summary AS
         AND b.room_name IS NULL
         AND b.original_contact_handle_id NOT IN (SELECT handle_id FROM handle_blacklist)
         AND b.service IN ('SMS', 'iMessage', 'Yahoo')
+;
+
+CREATE VIEW dashboard_user_restricted_view AS
+    SELECT DISTINCT
+        e.value AS user_email_address,
+        m.contact_display_name,
+        m.handle_id
+    FROM grafana_user_metadata u
+    LEFT JOIN email_address e ON e.id = u.email_address_id
+    LEFT JOIN grafana_restricted_user_handle_whitelist w ON w.user_id = u.id
+    CROSS JOIN (
+        SELECT DISTINCT
+            m.contact_display_name,
+            m.handle_id,
+            m.handle_rowid
+        FROM dashboard_message_summary m
+    ) m
+    WHERE
+        u.restrict_view = 0
+        OR (u.restrict_view = 1 AND w.handle_rowid = m.handle_rowid)
 ;

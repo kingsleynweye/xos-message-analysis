@@ -1,3 +1,5 @@
+PRAGMA FOREIGN_KEYS = ON;
+
 INSERT INTO dashboard_message_summary (
     message_rowid,
     chat_service_name,

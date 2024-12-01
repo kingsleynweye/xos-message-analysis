@@ -1,0 +1,5 @@
+---
+grafana_restricted_user_handle_whitelist_query: sql/select_restricted_user_handle_whitelist.sql
+database_kwargs:
+    timeout: 300
+...

@@ -13,8 +13,10 @@ from src.data import (
     CountryAreaCode,
     DashboardMessage,
     Gamepigeon,
+    GrafanaUserMetadata,
     HandleIDBlacklist,
     MessageAttributedBody,
+    GrafanaRestrictedUserHandleWhitelist,
     WordCloud,
 )
 from src.database import SQLiteDatabase
@@ -24,12 +26,14 @@ LOGGER = logging.getLogger()
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s: %(message)s')
 
 class ProcessDatabase:
-    def __init__(self, database_source_filepath: Path | str = None, database_destination_filepath: Path | str = None, database_kwargs: dict[str, Any] = None, contacts_filepath: Path | str = None, handle_id_blacklist_filepath: Path | str = None):
+    def __init__(self, database_source_filepath: Path | str = None, database_destination_filepath: Path | str = None, database_kwargs: dict[str, Any] = None, contacts_filepath: Path | str = None, handle_id_blacklist_filepath: Path | str = None, grafana_user_metadata_filepath: Path | str =  None, grafana_restricted_user_handle_whitelist_query: Path | str = None):
         self.database_source_filepath = database_source_filepath
         self.database_destination_filepath = database_destination_filepath
         self.database_kwargs = database_kwargs
         self.contacts_filepath = contacts_filepath
         self.handle_id_blacklist_filepath = handle_id_blacklist_filepath
+        self.grafana_user_metadata_filepath = grafana_user_metadata_filepath
+        self.grafana_restricted_user_handle_whitelist_query = grafana_restricted_user_handle_whitelist_query
 
     @property
     def database_source_filepath(self) -> Path | str:
@@ -91,7 +95,7 @@ class ProcessDatabase:
         
         LOGGER.debug(f'Updating Contacts data.')
         try:
-            Contacts(model.get_database(),filepath=model.contacts_filepath).update()
+            Contacts(model.get_database(), filepath=model.contacts_filepath).update()
 
         except FileNotFoundError:
             LOGGER.debug(f'No Contacts data found.' 
@@ -110,6 +114,19 @@ class ProcessDatabase:
         LOGGER.debug(f'Updating DashboardMessage data.')
         DashboardMessage(model.get_database()).update()
 
+        LOGGER.debug(f'Updating GrafanaUserMetadata data.')
+        try:
+            GrafanaUserMetadata(model.get_database(), filepath=model.grafana_user_metadata_filepath).update()
+
+        except FileNotFoundError:
+            LOGGER.debug(f'No GrafanaUserMetadata data found.' 
+                ' If you did not provide a grafana_user_filepath, consider providing your'
+                    f' Grafana users metadata in \'{FileHandler.GRAFANA_USER_METADATA_FILEPATH}\'.')
+
+        LOGGER.debug(f'Updating GrafanaRestrictedUserHandleWhitelist data.')
+        GrafanaRestrictedUserHandleWhitelist(
+            model.get_database(), query=model.grafana_restricted_user_handle_whitelist_query).update()
+        
         LOGGER.debug(f'Updating Gamepigeon data.')
         Gamepigeon(model.get_database()).update()
 
@@ -136,14 +153,33 @@ class ProcessDatabase:
 
         return filepath
     
+class __ReadRunKwargsAction(argparse.Action):
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace, values: list[str], option_string: str | None = None):
+        kwargs = {}
+
+        for k in values:
+            if k.endswith('.json'):
+                k = FileHandler.read_json(k)
+
+            elif k.endswith('.yaml') or k.endswith('.yml'):
+                k = FileHandler.read_yaml(k)
+
+            else:
+                k = json.loads(k)
+
+            kwargs = {**kwargs, **k}
+
+        setattr(namespace, self.dest, kwargs)
+    
 def main():
     parser = argparse.ArgumentParser(prog='ios_message_analysis', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(title='subcommands', required=True, dest='subcommands')
 
     # run data processing
-    subparser_process_database = subparsers.add_parser('process_database')
-    subparser_process_database.add_argument('-c', '--copy', dest='copy', action='store_true')
-    subparser_process_database.add_argument('-k', '--kwargs', dest='kwargs', type=json.loads, help=('Initialization parameters for src.ProcessDatabase.'))
+    subparser_process_database = subparsers.add_parser('process_database', help='Process chat.db for use in Grafana.')
+    subparser_process_database.add_argument('-c', '--copy', dest='copy', action='store_true', help='Copy new database from source.')
+    subparser_process_database.add_argument('-k', '--kwargs', dest='kwargs', nargs='+', action=__ReadRunKwargsAction, 
+        help='Initialization parameters for src.ProcessDatabase. Can be provided as a JSON or YAML filepath, or JSON string.')
     subparser_process_database.set_defaults(func=ProcessDatabase.run)
 
     args = parser.parse_args()

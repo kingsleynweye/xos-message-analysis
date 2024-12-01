@@ -1,3 +1,5 @@
+PRAGMA FOREIGN_KEYS = ON;
+
 INSERT INTO gamepigeon_application (name)
 VALUES
     ('8 Ball'), 

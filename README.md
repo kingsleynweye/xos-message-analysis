@@ -25,7 +25,7 @@ python -m src.main process_database -c
 It will first copy the database from `~/Library/Messages/chat.db` to `data/chat.db` (in the repository's root directory) before processing the data using the `src.ProcessDatabase` class.
 
 ## Use of ChatGPT
-A lot of debugging and data wrangling went into this project and there doesn't seem to be any actual documentation on the `chat.db` schema by Apple, so ChatGPT became my companion on this project. Here are some of our public chats that helped with debugging SQLite and the schema (titles are ChatGPT generated):
+A lot of debugging and data wrangling went into this project and there doesn't seem to be any actual documentation on the `chat.db` schema by Apple, so ChatGPT became my companion on this project. Here are some of our public chats that helped with debugging SQLite and the schema (titles are ChatGPT-generated):
 
 - [SQLite Performance Optimization](https://chatgpt.com/share/674a03a6-ad48-8010-bf15-516bca55bc1e)
 - [SQLite query hanging fix](https://chatgpt.com/share/674a00e4-d720-8010-980c-38a6a267098d)

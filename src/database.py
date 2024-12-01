@@ -52,6 +52,7 @@ class SQLiteDatabase:
         try:
             queries = query.split(';')
             queries = [q for q in queries if q.strip() != '']
+            cursor.execute('PRAGMA FOREIGN_KEYS = ON;')
             
             for q in queries:
                 cursor.execute(self.__validate_query(q))
@@ -114,6 +115,7 @@ class SQLiteDatabase:
         is_view = False if is_view is None else is_view
         try:
             connection = self.__get_connection()
+            connection.execute('PRAGMA FOREIGN_KEYS = ON;')
             query = f"DROP {'VIEW' if is_view else 'TABLE'} IF EXISTS {name}"
             connection.execute(self.__validate_query(query))
             connection.commit()
@@ -126,6 +128,7 @@ class SQLiteDatabase:
             queries = f.read()
 
         queries = self.replace_query(queries, replace)
+        queries = 'PRAGMA FOREIGN_KEYS = ON;\n' + queries
         
         try:
             connection = self.__get_connection()
@@ -202,6 +205,7 @@ class SQLiteDatabase:
         
         try:
             connection = self.__get_connection()
+            connection.execute('PRAGMA FOREIGN_KEYS = ON;')
             query = self.__validate_query(query)
             connection.executemany(query, values)
             connection.commit()
@@ -211,6 +215,7 @@ class SQLiteDatabase:
 
     def insert_batch(self, query_list: List[str], values_list: List[List[Union[List[Union[float, int, str]], Mapping[str, Union[float, int, str]]]]]):
         connection = self.__get_connection()
+        connection.execute('PRAGMA FOREIGN_KEYS = ON;')
 
         try:
             for query, values in zip(query_list, values_list):

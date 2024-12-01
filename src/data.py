@@ -77,7 +77,7 @@ class HandleIDBlacklist(Data):
         self.update_lists("""
             INSERT INTO handle_blacklist (handle_id) VALUES (:handle_id)
             ON CONFLICT (handle_id) DO NOTHING
-            """, self.get_data())
+            ;""", self.get_data())
 
 class Contacts(Data):
     NAME_COLUMNS = [
@@ -117,8 +117,7 @@ class Contacts(Data):
                 (SELECT id FROM contact_name WHERE value = :middle_name),
                 (SELECT id FROM contact_company WHERE value = :organization_name),
                 (SELECT id FROM contact_department WHERE value = :organization_department)
-            )
-            ;""", contact_data)
+            );""", contact_data)
 
         phone_number_data = self.__get_phone_number_data(data)
         self.update_lists("INSERT INTO phone_number (value) VALUES (:phone_number) ON CONFLICT (value) DO NOTHING;", phone_number_data)
@@ -278,7 +277,7 @@ class MessageAttributedBody(Data):
             INSERT INTO parsed_message_attributed_body (message_rowid, value) 
             VALUES (:message_rowid, :attributed_body)
             ON CONFLICT (message_rowid) DO NOTHING
-            """, self.get_data().dropna(subset=['attributed_body']))
+            ;""", self.get_data().dropna(subset=['attributed_body']))
         
     def get_data(self) -> pd.DataFrame:
         data = super().get_data()
@@ -304,6 +303,50 @@ class DashboardMessage(Data):
             input=open(self.query, 'r').read(), 
             text=True
         )
+
+class GrafanaUserMetadata(Data):
+    def __init__(self, *args, filepath: Path | str = None, **kwargs) -> None:
+        filepath = FileHandler.GRAFANA_USER_METADATA_FILEPATH if filepath is None else filepath
+        super().__init__(*args, filepath=filepath, **kwargs)
+
+    def set_insert_data(self):
+        data = self.get_data()
+
+        self.update_lists("""
+            INSERT INTO email_address (value)
+                VALUES (:email_address) ON CONFLICT DO NOTHING
+            ;""", data.drop_duplicates(subset=['email_address']))
+        
+        self.update_lists("""
+            INSERT INTO grafana_user_metadata (email_address_id, contact_reference_handle_rowid, restrict_view)
+                VALUES (
+                    (SELECT id FROM email_address WHERE value = :email_address),
+                    (SELECT handle_rowid FROM contact_handle_map WHERE handle_id = :contact_reference_handle_id LIMIT 1),
+                    :restrict_view
+                ) ON CONFLICT (email_address_id) DO NOTHING
+            ;""", data)
+        
+class GrafanaRestrictedUserHandleWhitelist(Data):
+    def __init__(self, *args, query: Path | str = None, **kwargs) -> None:
+        query = """
+        SELECT
+            m.id AS user_id,
+            r.handle_rowid
+        FROM grafana_user_metadata m
+        LEFT JOIN contact_handle_map h ON h.handle_rowid = m.contact_reference_handle_rowid
+        LEFT JOIN contact_handle_map r ON r.contact_id = h.contact_id
+        WHERE m.restrict_view = 1
+        ;
+        """ if query is None else query
+        super().__init__(*args, query=query, **kwargs)
+
+    def set_insert_data(self):
+        data = self.get_data()
+
+        self.update_lists("""
+            INSERT INTO grafana_restricted_user_handle_whitelist ("user_id", handle_rowid)
+            VALUES (:user_id, :handle_rowid)
+            ON CONFLICT ("user_id", handle_rowid) DO NOTHING;""", data)
             
 class Gamepigeon(Data):
     __OBJECT_FILTERS = [
@@ -363,7 +406,7 @@ class Gamepigeon(Data):
             :my_points,
             :opponent_points
             ) ON CONFLICT (associated_message_guid) DO NOTHING
-            """, self.get_data())
+            ;""", self.get_data())
 
     def get_data(self) -> pd.DataFrame:
         data = super().get_data()
@@ -524,8 +567,7 @@ class Gamepigeon(Data):
         return games
     
     def __get_valid_appids(self) -> list[str]:
-        data = self.database.query_table(
-            "SELECT name FROM gamepigeon_application")['name'].tolist()
+        data = self.database.query_table("SELECT name FROM gamepigeon_application;")['name'].tolist()
 
         return data
 
